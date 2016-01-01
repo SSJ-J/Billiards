@@ -225,12 +225,62 @@ GLvoid GLhandlers::renderBanner(GLfloat x, GLfloat y, GLfloat z, GLint texture) 
 	t++;
 }
 
+GLvoid GLhandlers::renderSky() {
+	glPushMatrix();
+		glBindTexture(GL_TEXTURE_2D, textures[TEXTURE_SKY]);
+		gluSphere(ballQuadric, 1.0f, 32, 32);
+		
+		//// Front
+		//glBindTexture(GL_TEXTURE_2D, textures[TEXTURE_SKY_FRONT]);
+		//glBegin(GL_QUADS);
+		//glTexCoord2f(0.0f, 0.0f); glVertex3f(-10.0f, -10.0f, -15.0f);
+		//glTexCoord2f(1.0f, 0.0f); glVertex3f(10.0f, -10.0f, -15.0f);
+		//glTexCoord2f(1.0f, 1.0f); glVertex3f(10.0f, 10.0f, -15.0f);
+		//glTexCoord2f(0.0f, 1.0f); glVertex3f(-10.0f, 10.0f, -15.0f);
+		//glEnd();
+
+		//// Left
+		//glBindTexture(GL_TEXTURE_2D, textures[TEXTURE_SKY_LEFT]);
+		//glBegin(GL_QUADS);
+		//glTexCoord2f(1.0f, 0.0f); glVertex3f(-10.0f, -10.0f, -15.0f);
+		//glTexCoord2f(1.0f, 1.0f); glVertex3f(-10.0f, 10.0f, -15.0f);
+		//glTexCoord2f(0.0f, 1.0f); glVertex3f(-10.0f, 10.0f, 5.0f);
+		//glTexCoord2f(0.0f, 0.0f); glVertex3f(-10.0f, -10.0f, 5.0f);
+		//glEnd();
+
+		//// Back
+		//glBindTexture(GL_TEXTURE_2D, textures[TEXTURE_SKY_BACK]);
+		//glBegin(GL_QUADS);
+		//glTexCoord2f(1.0f, 0.0f); glVertex3f(-10.0f, -10.0f, 5.0f);
+		//glTexCoord2f(1.0f, 1.0f); glVertex3f(-10.0f, 10.0f, 5.0f);
+		//glTexCoord2f(0.0f, 1.0f); glVertex3f(10.0f, 10.0f, 5.0f);
+		//glTexCoord2f(0.0f, 0.0f); glVertex3f(10.0f, -10.0f, 5.0f);
+		//glEnd();
+
+		//// Right
+		//glBindTexture(GL_TEXTURE_2D, textures[TEXTURE_SKY_RIGHT]);
+		//glBegin(GL_QUADS);
+		//glTexCoord2f(1.0f, 0.0f); glVertex3f(10.0f, -10.0f, 5.0f);
+		//glTexCoord2f(0.0f, 0.0f); glVertex3f(10.0f, -10.0f, -15.0f);
+		//glTexCoord2f(0.0f, 1.0f); glVertex3f(10.0f, 10.0f, -15.0f);
+		//glTexCoord2f(1.0f, 1.0f); glVertex3f(10.0f, 10.0f, 5.0f);
+
+		//// Down
+		//glVertex3f(-10.0f, -10.0f, 5.0f);
+		//glVertex3f(10.0f, -10.0f, 5.0f);
+		//glVertex3f(10.0f, -10.0f, -15.0f);
+		//glVertex3f(-10.0f, -10.0f, -15.0f);
+
+		//glEnd();
+	glPopMatrix();
+}
+
 /* Deal with key events */
 GLint shoot = -1;	// is shoot ?
 GLvoid dealKeys(GLvoid) {
 	/* change angle of camera */
-	if (keys[VK_UP])  xAngle += (xAngle > 90.0f) ? 0.0f : 0.2f;
-	if (keys[VK_DOWN]) xAngle -= (xAngle < 0.0f) ? 0.0f : 0.2f;
+	if (keys[VK_UP])  xAngle += (xAngle > 180.0f) ? 0.0f : 0.2f;
+	if (keys[VK_DOWN]) xAngle -= (xAngle < -180.0f) ? 0.0f : 0.2f;
 	if (keys[VK_LEFT]) yAngle += (yAngle > 360.0f) ? -360.0f : 0.2f;
 	if (keys[VK_RIGHT]) yAngle -= (yAngle < 0.0f) ? -360.0f : 0.2f;
 
@@ -288,6 +338,7 @@ GLint GLhandlers::drawHandler() {								// Here's Where We Do All The Drawing
 	/* Render */
 	glPushMatrix();
 		glTranslatef(0.0f, 0.0f, 1.0f);
+		renderSky();
 		renderTable();
 		renderFlag(-2.0f, 0.0f, TEXTURE_FLAG_2);
 		renderFlag(2.0f, -LENGTH, TEXTURE_FLAG_1);

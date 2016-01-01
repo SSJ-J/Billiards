@@ -22,6 +22,7 @@
     <ProjectGuid>{A0951276-93ED-4A1A-8265-C80CB63AF430}</ProjectGuid>
     <RootNamespace>GLProject</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <ProjectName>Billiards</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
