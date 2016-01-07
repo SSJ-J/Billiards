@@ -37,7 +37,8 @@ char *pictures[] = {
 	"Data/flag_1.bmp",
 	"Data/flag_2.bmp",
 	"Data/title.bmp",
-	"Data/sky.bmp"
+	"Data/sky.bmp",
+	"Data/ground.bmp"
 };
 
 GLint GLhandlers::loadGLTexture(GLuint *textures, GLuint size) {
