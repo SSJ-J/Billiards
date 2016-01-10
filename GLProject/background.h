@@ -2,6 +2,7 @@
 
 #include <windows.h>	
 #include <string>
+#include <GL\glew.h>
 #include <GL\gl.h>			
 #include <GL\glu.h>			
 #include <GL\glut.h>	

@@ -1,13 +1,10 @@
 #pragma once
 
-#include <windows.h>		
-#include <GL\gl.h>			
-#include <GL\glu.h>			
-#include <GL\glut.h>
-
 #include "background.h"
 
 #define TEXTURES				23
+#define TEXTURES_2D				23
+#define TEXTURES_3D				0
 #define TEXTURE_BALL_BASE		0
 #define TEXTURE_TABLE			16
 #define TEXTURE_CUESTICK		17
@@ -28,15 +25,16 @@ public:
 private:
 	GLuint textures[TEXTURES];		// textures on model
 
-	GLint loadGLTexture(GLuint *textures, GLuint size);
+	GLint loadGLTexture(GLuint *textures);
 	GLvoid loadRawFile(LPSTR strName, GLuint nSize, BYTE *pHeightMap);
 
 	// GLvoid renderTable();		// Render the surface of table
 	GLvoid renderBall();		// Render 16 balls on table
-	// GLvoid renderCueStick();	// Render cue stick
 	GLvoid renderFlag(GLfloat x, GLfloat z, GLint texture);	// Render flags 
 	GLvoid renderBanner(GLfloat x, GLfloat y, GLfloat z, GLint texture);	// Render Banner
 	GLvoid renderSky();
 	GLvoid renderTerrain();
+
+	// GLvoid renderCueStick();	// Render cue stick
 };
 

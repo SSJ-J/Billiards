@@ -1,6 +1,25 @@
-#include <GL/GLAUX.H>
 #include <stdio.h>
 #include "draw.h"
+#include <GL/GLAUX.H>
+
+#define iWidth 16
+#define iHeight 16 
+#define iDepth 16
+GLubyte image[iDepth][iHeight][iWidth][3];
+
+/*  Create a 16x16x16x3 array with different color values in
+*  each array element [r, g, b].  Values range from 0 to 255.
+*/
+void makeImage(void) {
+	for (int s = 0; s < iWidth; s++)
+		for (int t = 0; t < iHeight; t++)
+			for (int r = 0; r < iDepth; r++) {
+				image[r][t][s][0] = (GLubyte)(s * 17);
+				image[r][t][s][1] = (GLubyte)(t * 17);
+				image[r][t][s][2] = (GLubyte)(r * 17);
+			}
+}
+
 
 AUX_RGBImageRec *loadBMP(const char *filename) {
 	if (!filename) return NULL;
@@ -41,10 +60,11 @@ char *pictures[] = {
 	"Data/ground.bmp"
 };
 
-GLint GLhandlers::loadGLTexture(GLuint *textures, GLuint size) {
+GLint GLhandlers::loadGLTexture(GLuint *textures) {
 	int flag = FALSE;
 	AUX_RGBImageRec *texturePic[TEXTURES];
 	for (int i = 0; i < TEXTURES; i++) {
+		if (i == TEXTURE_BALL_BASE + 8) continue;
 		if (texturePic[i] = loadBMP((pictures[i]))) {	// load BMP
 			flag = TRUE;
 			glGenTextures(1, &textures[i]);		// generate textures
@@ -62,5 +82,20 @@ GLint GLhandlers::loadGLTexture(GLuint *textures, GLuint size) {
 			}
 		}
 	}
+
+	makeImage();
+	glTexImage3D = (PFNGLTEXIMAGE3DPROC)wglGetProcAddress("glTexImage3D");
+	glGenTextures(1, &textures[TEXTURE_BALL_BASE + 8]);
+	glBindTexture(GL_TEXTURE_3D, textures[TEXTURE_BALL_BASE + 8]);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER,
+		GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER,
+		GL_NEAREST);
+	glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB, iWidth, iHeight,
+		iDepth, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+
 	return flag;
 }

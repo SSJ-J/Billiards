@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Vector3.h"
+
 /* Confugration of table */
 #define WIDTH 3.0f
 #define LENGTH (2 * WIDTH)
@@ -9,37 +11,30 @@
 /* Confugration of ball */
 #define RADIUS 0.08f
 
-/* Confugration of cue stick */
-#define MIN_POWER 1.0f
-#define MAX_POWER 10.0f
-
-#define X	(0)
-#define Y	(1)
-#define Z	(2)
-
 /* Ball on the table */
 class Ball {
 public:
 	unsigned char num;		// number
 	float rad;				// radius
-	float pos[3];			// position on the table
-	float vel[3];			// velocity
+	Point pos;				// position on the table
+	Point vel;				// velocity
 
 public:
 	Ball();
-	Ball(unsigned char number, float position[3], float radius = RADIUS);
+	Ball(unsigned char number, Point position, float radius = RADIUS);
 	virtual void move();
+	void collisionCheck(Ball * const ball);
 
 protected:
 	void frictionFreeMove();
-	void boundCheck(int dir);
+	void boundCheck();
 };
 
 /* Balls that can walk slowly on table */
 class WalkBall : public Ball {
 public:
 	WalkBall();
-	WalkBall(unsigned char number, float position[3], float radius = RADIUS);
+	WalkBall(unsigned char number, Point position, float radius = RADIUS);
 	virtual void move();
 };
 
@@ -47,14 +42,9 @@ public:
 class FlyBall : public Ball {
 public:
 	FlyBall();
-	FlyBall(unsigned char number, float position[3], float radius = RADIUS);
+	FlyBall(unsigned char number, Point position, float radius = RADIUS);
 	virtual void move();
 	void landing();
-};
-
-struct CueStick {
-	float power;		// power used to push stick
-	float direction[3];		// direction of stick
 };
 
 /* All balls on a table */
@@ -63,14 +53,24 @@ struct CueStick {
 class Billard {
 private:
 	Ball *balls[16];
-	CueStick *cueStick;
 
 public:
 	Billard();
 	~Billard();
 	Ball *getBall(unsigned char num) const;
-	CueStick *getStick() const;
-	void shoot(int interval);
-	void updateStick(float stickAngle, float stickPower);
+	void shoot(Point accDir);
 	void updateBalls();
 };
+
+// CueStick *Billard::cueStick;
+// CueStick *Billard::getStick() const;
+// void Billard::updateStick(float stickAngle, float stickPower);
+
+/* Confugration of cue stick */
+//#define MIN_POWER 1.0f
+//#define MAX_POWER 10.0f
+
+//struct CueStick {
+//	float power;		// power used to push stick
+//	float direction[3];		// direction of stick
+//};

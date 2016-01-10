@@ -15,7 +15,7 @@ Billard::Billard() {
 	float hpl = sqrt(3) * r;		// height per layer
 	float first = -3.5f;	// position 1
 							/* position of 16 balls */
-	float positions[16][3] = {
+	Point positions[16] = {
 		{ 0.0f, r, -1.3f },
 		{ 0.0f, r, first },
 		{ -2 * r, r, first - 4 * hpl },
@@ -45,17 +45,17 @@ Billard::Billard() {
 		balls[i + 8] = new WalkBall(i + 8, positions[i + 8]);
 	}
 
-	cueStick = new CueStick();	// cue stick
-	cueStick->power = 0;
-	cueStick->direction[0] = 0.0f;
-	cueStick->direction[1] = 0.0f;
-	cueStick->direction[2] = -1.0f;		// front
+	//cueStick = new CueStick();	// cue stick
+	//cueStick->power = 0;
+	//cueStick->direction[0] = 0.0f;
+	//cueStick->direction[1] = 0.0f;
+	//cueStick->direction[2] = -1.0f;		// front
 }
 
 Billard::~Billard() {
 	for (int i = 0; i < 16; i++)
 		delete balls[i];
-	delete cueStick;
+	// delete cueStick;
 }
 
 Ball *Billard::getBall(unsigned char num) const {
@@ -64,43 +64,49 @@ Ball *Billard::getBall(unsigned char num) const {
 	return balls[num];
 }
 
-CueStick *Billard::getStick() const {
-	return cueStick;
-}
-
-void Billard::shoot(int interval) {
-	if (interval == 0) {
-		float power = cueStick->power;
-		float dx = cueStick->direction[0],
-			  dy = cueStick->direction[1],
-			  dz = cueStick->direction[2];
-		balls[0]->vel[X] = power*dx / 100.0f;
-		balls[0]->vel[Y] = power*dy / 100.0f;
-		balls[0]->vel[Z] = power*dz / 100.0f;
-	}
-}
-
-void Billard::updateStick(float stickAngle, float stickPower) {
-	float pi = 4 * atan(1);
-	cueStick->direction[0] = -sin(stickAngle / 180 * pi);
-	cueStick->direction[1] = 0.0f;
-	cueStick->direction[2] = -cos(stickAngle / 180 * pi);
-	cueStick->power = stickPower;
+void Billard::shoot(Point accDir) {
+	// 100 is the conversion fraction
+	float tmp = 200 * accDir.norm();
+	Point acc = accDir / tmp;
+	balls[0]->vel += acc;
 }
 
 void Billard::updateBalls() {
 	int walknum[6] = { 5, 6, 7, 13, 14, 15 };
 	WalkBall *wb = NULL;
 	FlyBall *fb = (FlyBall *)balls[8];
+	Ball *ball = NULL;
 
-	balls[0]->move();
-
-	/* Walk Ball*/
-	for (int i = 0; i < 6; i++) {
-		wb = (WalkBall *)balls[walknum[i]];
-		wb->move();
+	for (int i = 0; i < 16; i++) {
+		ball = balls[i];
+		ball->move();
 	}
 
-	/* Fly Ball */
-	fb->move();
+	//balls[0]->move();
+
+	///* Walk Ball*/
+	//for (int i = 0; i < 6; i++) {
+	//	wb = (WalkBall *)balls[walknum[i]];
+	//	wb->move();
+	//}
+
+	///* Fly Ball */
+	//fb->move();
+
+	for (int i = 0; i < 16; i++) {
+		for (int j = i + 1; j < 16; j++)
+			balls[i]->collisionCheck(balls[j]);
+	}
 }
+
+//CueStick *Billard::getStick() const {
+//	return cueStick;
+//}
+
+//void Billard::updateStick(float stickAngle, float stickPower) {
+//	float pi = 4 * atan(1);
+//	cueStick->direction[0] = -sin(stickAngle / 180 * pi);
+//	cueStick->direction[1] = 0.0f;
+//	cueStick->direction[2] = -cos(stickAngle / 180 * pi);
+//	cueStick->power = stickPower;
+//}

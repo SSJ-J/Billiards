@@ -1,6 +1,7 @@
+#include "background.h"
 #include "draw.h"
 #include "entity.h"
-#include "background.h"
+#include "sphere.h"
 #include <cmath>
 
 Billard billard;	// game logic
@@ -8,8 +9,8 @@ GLUquadricObj *ballQuadric;		// used to render quadric(sphere, cylinder...)
 GLUquadricObj *skyQuadric;		// used to render sky dome
 GLfloat stickAngle = 0.0f;	// angle offset of cue stick in z direction
 GLfloat stickPower = 1.0f;
-GLfloat camera[3] = { 0.0f, 5.0f, 5.0f };
-GLfloat view[3];
+Point camera = { 0.0f, 5.0f, 5.0f };
+Point view;
 
 /* Used for banner and flags */
 GLfloat PI = 4 * atan(1);
@@ -46,9 +47,10 @@ inline GLfloat getHeight(GLfloat x, GLfloat z) {
 
 /* Some initialization of whole scene (use only once) */
 GLint GLhandlers::initalHandler() {									// All Setup For OpenGL Goes Here
-	if (!loadGLTexture(textures, 1))
+	if (!loadGLTexture(textures))
 		return FALSE;
 	glEnable(GL_TEXTURE_2D);							// Enable 2D Textures
+
 	glShadeModel(GL_SMOOTH);							// Enable Smooth Shading
 	glClearColor(0.5f, 0.5f, 0.5f, 0.5f);				// Grey Background
 	glClearDepth(1.0f);									// Depth Buffer Setup
@@ -59,7 +61,7 @@ GLint GLhandlers::initalHandler() {									// All Setup For OpenGL Goes Here
 	glEnable(GL_MAP2_VERTEX_3);							// Enable 2D-Evaluator
 	glEnable(GL_MAP2_TEXTURE_COORD_2);					// Enable 2D-Texture
 
-	// For Bezier  Curved Surface Animation
+	// For Bezier Curved Surface Animation
 	for (int i = 0; i < UNUM; i++) {
 		for (int j = 0; j < VNUM; j++) {
 			ctrlpoints[i][j][1] = -i / double(UNUM) * FLAG_LENGTH;
@@ -152,22 +154,29 @@ GLvoid GLhandlers::renderTerrain() {
 /* Render 16 balls on table */
 GLvoid GLhandlers::renderBall() {
 	Ball *ball = billard.getBall(0);
-	view[X] = ball->pos[X];
-	view[Y] = ball->pos[Y] + getHeight(ball->pos[X], ball->pos[Z]);//ball->pos[Y];
-	view[Z] = ball->pos[Z];
+	view.x = ball->pos.x;
+	view.y = ball->pos.y + getHeight(ball->pos.x, ball->pos.z);//ball->pos[Y];
+	view.z = ball->pos.z;
 
 	for (int i = 0; i < 16; i++) {
 		ball = billard.getBall(i);
-		float x = ball->pos[X],
-			y = ball->pos[Y] + getHeight(ball->pos[X], ball->pos[Z]), // ball->pos[Y],
-			z = ball->pos[Z],
+		float x = ball->pos.x,
+			y = ball->pos.y + getHeight(ball->pos.x, ball->pos.z), // ball->pos[Y],
+			z = ball->pos.z,
 			r = ball->rad;
 		glPushMatrix();
 			glTranslatef(x, y, z);
-			glBindTexture(GL_TEXTURE_2D, textures[TEXTURE_BALL_BASE+i]);
-			gluSphere(ballQuadric, r, 32, 32);	// SolidSphere cannot show all texture
+			if (i != 8) {
+				glBindTexture(GL_TEXTURE_2D, textures[TEXTURE_BALL_BASE + i]);
+				gluSphere(ballQuadric, r, 32, 32);	// SolidSphere cannot show all texture
+			}
+			else {
+				drawSphere(r, textures[TEXTURE_BALL_BASE + i], 50, 50);
+			}
+
 		glPopMatrix();
 	}
+
 }
 
 /* Render flags */
@@ -256,8 +265,6 @@ GLvoid GLhandlers::renderBanner(GLfloat x, GLfloat y, GLfloat z, GLint texture) 
 	t++;
 }
 
-/* Deal with key events */
-GLint shoot = -1;	// is shoot ?
 GLvoid dealKeys(GLvoid) {
 	/* change angle of camera */
 	// if (keys[VK_UP])  xAngle += (xAngle > 180.0f) ? 0.0f : 0.2f;
@@ -266,31 +273,44 @@ GLvoid dealKeys(GLvoid) {
 	// if (keys[VK_RIGHT]) yAngle -= (yAngle < 0.0f) ? -360.0f : 0.2f;
 
 	/* change location of camera*/
-	if (keys['J']) camera[0] -= (camera[0] < -5.0f) ? 0.0f : 0.01f;
-	if (keys['L']) camera[0] += (camera[0] > 5.0f) ? 0.0f : 0.01f;
-	if (keys['U']) camera[1] -= (camera[1] < -2.0f) ? 0.0f : 0.01f;
-	if (keys['O']) camera[1] += (camera[1] > 5.0f) ? 0.0f : 0.01f;
-	if (keys['I']) camera[2] -= (camera[2] < -10.0f)? 0.0f : 0.01f;
-	if (keys['M']) camera[2] += (camera[2] > 5.0f) ? 0.0f : 0.01f;
-	if (mouse[1]) {			// reset
-		camera[0] = 0.0f;
-		camera[1] = 5.0f;
-		camera[2] = 5.0f;
-	}
-
+	if (keys['J']) camera.x -= (camera.x < -5.0f) ? 0.0f : 0.01f;
+	if (keys['L']) camera.x += (camera.x > 5.0f) ? 0.0f : 0.01f;
+	if (keys['U']) camera.y -= (camera.y < -2.0f) ? 0.0f : 0.01f;
+	if (keys['O']) camera.y += (camera.y > 5.0f) ? 0.0f : 0.01f;
+	if (keys['I']) camera.z -= (camera.z < -10.0f)? 0.0f : 0.01f;
+	if (keys['M']) camera.z += (camera.z > 5.0f) ? 0.0f : 0.01f;
+	if (keys['K'])  camera = { 0.0f, 5.0f, 5.0f }; // reset
+		
 	/* Player Controller */
-	// if (keys['A']) stickAngle += (stickAngle > 360.0f) ? -360.0f : 0.2f;
-	// if (keys['D']) stickAngle -= (stickAngle < 0.0f) ? -360.0f : 0.2f;
+	Point accDir;
+	Ball *mother = billard.getBall(0);
+	if (keys['W']) {
+		accDir = mother->pos - camera;
+		accDir.y = 0.0f;
+		billard.shoot(accDir);
+	}
+	if (keys['S']) {
+		accDir =  camera - mother->pos;
+		accDir.y = 0.0f;
+		billard.shoot(accDir);
+	}
+	if (keys['A']) {
+		accDir.x = mother->pos.z - camera.z;
+		accDir.y = 0.0f;
+		accDir.z = camera.x - mother->pos.x;
+		billard.shoot(accDir);
+	}
+	if (keys['D']) {
+		accDir.x = camera.z - mother->pos.z;
+		accDir.y = 0.0f;
+		accDir.z = mother->pos.x - camera.x;
+		billard.shoot(accDir);
+	}
 }
 
+/* Deal with key events */
 GLvoid updateBillard(GLvoid) {
-	billard.updateStick(stickAngle, stickPower);
 	billard.updateBalls();
-	if (shoot >= 0) {
-		billard.shoot(shoot);
-		stickPower = MIN_POWER;
-		stickAngle = 0.0f;
-	}
 }
 
 GLint GLhandlers::drawHandler() {								// Here's Where We Do All The Drawing
@@ -298,7 +318,7 @@ GLint GLhandlers::drawHandler() {								// Here's Where We Do All The Drawing
 	glLoadIdentity();									// Reset The Current Modelview Matrix
 
 	/* Basic View*/
-	gluLookAt(camera[0], camera[1], camera[2], view[0], view[1], view[2], 0.0, 1.0, 0.0);
+	gluLookAt(camera.x, camera.y, camera.z, view.x, view.y, view.z, 0.0, 1.0, 0.0);
 
 	/* Lighting */
 	GLfloat LightAmbient[] = { 2.0f, 2.0f, 2.0f, 2.0f };	// Ambient Light
@@ -325,6 +345,18 @@ GLint GLhandlers::drawHandler() {								// Here's Where We Do All The Drawing
 	glFlush();
 	return TRUE;
 }
+
+/* Old Version : Deal with key events */
+//GLvoid updateBillard(GLvoid) {
+//	billard.updateBalls();
+//	static GLint shoot = -1;	// is shoot ?
+//	billard.updateStick(stickAngle, stickPower);
+//	if (shoot >= 0) {
+//		billard.shoot(shoot);
+//		stickPower = MIN_POWER;
+//		stickAngle = 0.0f;
+//	}
+//}
 
 /* Render the surface of table */
 //GLvoid GLhandlers::renderTable() {
