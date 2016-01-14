@@ -57,7 +57,8 @@ char *pictures[] = {
 	"Data/flag_2.bmp",
 	"Data/title.bmp",
 	"Data/sky.bmp",
-	"Data/ground.bmp"
+	"Data/ground.bmp",
+	"Data/Particle.bmp"
 };
 
 GLint GLhandlers::loadGLTexture(GLuint *textures) {
@@ -69,12 +70,12 @@ GLint GLhandlers::loadGLTexture(GLuint *textures) {
 			flag = TRUE;
 			glGenTextures(1, &textures[i]);		// generate textures
 			glBindTexture(GL_TEXTURE_2D, textures[i]);	// 2d
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 			glTexImage2D(GL_TEXTURE_2D, 0, 3,
 				texturePic[i]->sizeX, texturePic[i]->sizeY,
 				0, GL_RGB, GL_UNSIGNED_BYTE,
 				texturePic[i]->data);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 			if (texturePic[i]) {	// free
 				if (texturePic[i]->data)
 					free(texturePic[i]->data);

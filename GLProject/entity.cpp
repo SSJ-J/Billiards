@@ -63,13 +63,14 @@ void Ball::boundCheck() {
  *  If true, change position and velocity
  *  (Only considering 2D collision)
  */
-void Ball::collisionCheck(Ball * const that) {
+bool Ball::collisionCheck(Ball * const that) {
 	Point p1 = pos, p2 = that->pos;
 	Point v1 = vel, v2 = that->vel;
 	float r = rad;			// radius is the same
 	Point dir1 = p2 - p1, dir2 = p1-p2;
 	if (dir1.norm() > 2 * r)		// no collision
-		return;
+		return false;
+	if (v1.x * v2.x + v1.z * v2.z < 0) return false;
 
 	/* Component of velocity on the direction of 'dir' */
 	// (v1 ¡¤ dir) / (norm(dir))^2 * dir
@@ -81,6 +82,12 @@ void Ball::collisionCheck(Ball * const that) {
 	vel.y = 0.0f;
 	that->vel = v2 - c2 + c1;
 	that->vel.y = 0.0f;
+
+	/* make a distance */
+	pos += dir2 / (dir2.norm() * 10);
+	that->pos += dir1 / (dir1.norm() * 10);
+
+	return true;
 }
 
 /* --------- Walk Ball ---------- */

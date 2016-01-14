@@ -125,6 +125,8 @@
     <ClInclude Include="background.h" />
     <ClInclude Include="draw.h" />
     <ClInclude Include="entity.h" />
+    <ClInclude Include="noise.h" />
+    <ClInclude Include="particles.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="sphere.h" />
     <ClInclude Include="Vector3.h" />
@@ -135,6 +137,8 @@
     <ClCompile Include="draw.cpp" />
     <ClCompile Include="entity.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="noise.cpp" />
+    <ClCompile Include="particles.cpp" />
     <ClCompile Include="sphere.cpp" />
     <ClCompile Include="terrain.cpp" />
     <ClCompile Include="texture.cpp" />

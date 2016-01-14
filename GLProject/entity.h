@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Vector3.h"
+#include <vector>
 
 /* Confugration of table */
 #define WIDTH 3.0f
@@ -23,7 +24,7 @@ public:
 	Ball();
 	Ball(unsigned char number, Point position, float radius = RADIUS);
 	virtual void move();
-	void collisionCheck(Ball * const ball);
+	bool collisionCheck(Ball * const ball);
 
 protected:
 	void frictionFreeMove();
@@ -53,13 +54,14 @@ public:
 class Billard {
 private:
 	Ball *balls[16];
+	std::vector<Point> crashPoints;
 
 public:
 	Billard();
 	~Billard();
 	Ball *getBall(unsigned char num) const;
 	void shoot(Point accDir);
-	void updateBalls();
+	std::vector<Point> updateBalls();		// return crashPoints
 };
 
 // CueStick *Billard::cueStick;

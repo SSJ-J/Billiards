@@ -3,6 +3,8 @@
 #include <time.h>
 #include <iostream>
 
+const float FIRST_BALL_Z = -1.3f;
+
 /* Confugration of balls
 	9	2	11	 4	 10
 	  7	  3    12  15
@@ -16,7 +18,7 @@ Billard::Billard() {
 	float first = -3.5f;	// position 1
 							/* position of 16 balls */
 	Point positions[16] = {
-		{ 0.0f, r, -1.3f },
+		{ 0.0f, r, FIRST_BALL_Z },
 		{ 0.0f, r, first },
 		{ -2 * r, r, first - 4 * hpl },
 		{ -r, r, first - 3 * hpl },
@@ -68,35 +70,37 @@ void Billard::shoot(Point accDir) {
 	// 100 is the conversion fraction
 	float tmp = 200 * accDir.norm();
 	Point acc = accDir / tmp;
-	balls[0]->vel += acc;
+	if (balls[0]->vel.norm() < 0.1f)
+		balls[0]->vel += acc;
 }
 
-void Billard::updateBalls() {
+std::vector<Point> Billard::updateBalls() {
 	int walknum[6] = { 5, 6, 7, 13, 14, 15 };
 	WalkBall *wb = NULL;
 	FlyBall *fb = (FlyBall *)balls[8];
 	Ball *ball = NULL;
+	std::vector<Point> result = crashPoints;
 
 	for (int i = 0; i < 16; i++) {
 		ball = balls[i];
 		ball->move();
 	}
 
-	//balls[0]->move();
+	for (int j = 1; j < 16; j++) {
+		if (balls[0]->collisionCheck(balls[j])) {
+			Point p = (balls[0]->pos + balls[j]->pos) / 2.0f;
+			crashPoints.push_back(p);
+		}
+	}
 
-	///* Walk Ball*/
-	//for (int i = 0; i < 6; i++) {
-	//	wb = (WalkBall *)balls[walknum[i]];
-	//	wb->move();
-	//}
-
-	///* Fly Ball */
-	//fb->move();
-
-	for (int i = 0; i < 16; i++) {
+	for (int i = 1; i < 16; i++) {
 		for (int j = i + 1; j < 16; j++)
 			balls[i]->collisionCheck(balls[j]);
 	}
+
+	if(crashPoints.size() > 0 )
+		crashPoints.clear();		// make the vector empty
+	return result;
 }
 
 //CueStick *Billard::getStick() const {

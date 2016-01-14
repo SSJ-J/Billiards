@@ -25,6 +25,9 @@ void drawSphere(float r, GLuint texNum, GLuint uStepsNum, GLuint vStepNum) {
 		Point a = getPoint(0.0f, 0.0f);
 		Point b = getPoint(u, vstep);
 		Point c = getPoint(u + ustep, vstep);
+		Point n = (b - a) * (c - a);
+		n /= n.norm();
+		glNormal3f(n.x, n.y, n.z);
 		glTexCoord3f((1 + a.x) / 2, (1 + a.y) / 2, (1 + a.z) / 2); glVertex3f(a.x, a.y, a.z);
 		glTexCoord3f((1 + b.x) / 2, (1 + b.y) / 2, (1 + b.z) / 2); glVertex3f(b.x, b.y, b.z);
 		glTexCoord3f((1 + c.x) / 2, (1 + c.y) / 2, (1 + c.z) / 2); glVertex3f(c.x, c.y, c.z);
@@ -38,9 +41,12 @@ void drawSphere(float r, GLuint texNum, GLuint uStepsNum, GLuint vStepNum) {
 		for (int j = 0; j<uStepsNum; j++) {
 			glBegin(GL_QUADS);
 			Point a = getPoint(u, v);
-			Point b = getPoint(u + ustep, v);
+			Point b = getPoint(u, v + vstep);
 			Point c = getPoint(u + ustep, v + vstep);
-			Point d = getPoint(u, v + vstep);
+			Point d = getPoint(u + ustep, v);
+			Point n = (b - a) * (d - a);
+			n /= n.norm();
+			glNormal3f(n.x, n.y, n.z);
 			glTexCoord3f((1 + a.x) / 2, (1 + a.y) / 2, (1 + a.z) / 2); glVertex3f(a.x, a.y, a.z);
 			glTexCoord3f((1 + b.x) / 2, (1 + b.y) / 2, (1 + b.z) / 2); glVertex3f(b.x, b.y, b.z);
 			glTexCoord3f((1 + c.x) / 2, (1 + c.y) / 2, (1 + c.z) / 2); glVertex3f(c.x, c.y, c.z);
@@ -58,6 +64,9 @@ void drawSphere(float r, GLuint texNum, GLuint uStepsNum, GLuint vStepNum) {
 		Point a = getPoint(0, 1);
 		Point b = getPoint(u, 1 - vstep);
 		Point c = getPoint(u + ustep, 1 - vstep);
+		Point n = (b - a) * (c - a);
+		n /= n.norm();
+		glNormal3f(n.x, n.y, n.z);
 		glTexCoord3f((1 + a.x) / 2, (1 + a.y) / 2, (1 + a.z) / 2); glVertex3f(a.x, a.y, a.z);
 		glTexCoord3f((1 + b.x) / 2, (1 + b.y) / 2, (1 + b.z) / 2); glVertex3f(b.x, b.y, b.z);
 		glTexCoord3f((1 + c.x) / 2, (1 + c.y) / 2, (1 + c.z) / 2); glVertex3f(c.x, c.y, c.z);
@@ -68,3 +77,4 @@ void drawSphere(float r, GLuint texNum, GLuint uStepsNum, GLuint vStepNum) {
 	glDisable(GL_TEXTURE_3D);
 	glPopMatrix();
 }
+

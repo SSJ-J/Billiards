@@ -70,6 +70,12 @@ struct Vector3 {
 		return *this;
 	}
 
+	// out-production
+	Vector3<T> operator*(const Vector3<T> &p) {
+		Vector3<T> r = { y*p.z - p.y*z, -(x*p.z - p.x*z), x*p.y - p.x*y };
+		return r;
+	}
+
 	T norm() {
 		return sqrt(x*x + y*y + z*z);
 	}

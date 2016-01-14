@@ -7,8 +7,7 @@
 Billard billard;	// game logic
 GLUquadricObj *ballQuadric;		// used to render quadric(sphere, cylinder...)
 GLUquadricObj *skyQuadric;		// used to render sky dome
-GLfloat stickAngle = 0.0f;	// angle offset of cue stick in z direction
-GLfloat stickPower = 1.0f;
+
 Point camera = { 0.0f, 5.0f, 5.0f };
 Point view;
 
@@ -29,8 +28,11 @@ GLfloat texpts[2][2][2] = { { { 0.0,0.0 },{ 1.0,0.0 } },{ { 0.0, 1.0 },{ 1.0,1.0
 GLfloat bannerPoints[BANNER_UNUM][BANNER_VNUM][3];	// for banner
 
 /* Used for Terrain */
-const unsigned STEP_SIZE = 16;
+const unsigned STEP_SIZE = 8;
 BYTE terrainHeight[MAP_X][MAP_Y];
+
+/* For light */
+GLboolean light = TRUE;
 
 /* return the height */
 inline GLfloat getHeight(GLfloat x, GLfloat z) {
@@ -47,8 +49,7 @@ inline GLfloat getHeight(GLfloat x, GLfloat z) {
 
 /* Some initialization of whole scene (use only once) */
 GLint GLhandlers::initalHandler() {									// All Setup For OpenGL Goes Here
-	if (!loadGLTexture(textures))
-		return FALSE;
+	if (!loadGLTexture(textures))  return FALSE;
 	glEnable(GL_TEXTURE_2D);							// Enable 2D Textures
 
 	glShadeModel(GL_SMOOTH);							// Enable Smooth Shading
@@ -91,6 +92,7 @@ GLint GLhandlers::initalHandler() {									// All Setup For OpenGL Goes Here
 	gluQuadricNormals(skyQuadric, GLU_SMOOTH);
 	gluQuadricOrientation(skyQuadric, GLU_INSIDE);
 	gluQuadricTexture(skyQuadric, GL_TRUE);
+
 	return TRUE;										// Initialization Went OK
 }
 
@@ -105,6 +107,7 @@ GLvoid GLhandlers::renderSky() {
 	glEnable(GL_CLIP_PLANE0);
 	glBindTexture(GL_TEXTURE_2D, textures[TEXTURE_SKY]);
 	gluSphere(skyQuadric, 20.0f, 32, 32);
+	glBindTexture(GL_TEXTURE_2D, 0);		// clean the texture
 	glPopMatrix();
 	angle += 0.005f;
 }
@@ -119,35 +122,43 @@ GLvoid GLhandlers::renderTerrain() {
 	glScalef(scaleValue, scaleValue * 0.8, scaleValue);
 
 	glBindTexture(GL_TEXTURE_2D, textures[TEXTURE_GROUND]);
-	glBegin(GL_QUADS);
 	for (int i = 0; i < MAP_X; i += STEP_SIZE) {
 		for (int j = 0; j < MAP_Y; j += STEP_SIZE) {
+			
+			Point a = { (float)i, (float)terrainHeight[i][j] , (float)j };
+			Point b = { (float)i, (float)terrainHeight[i][j + STEP_SIZE], float(j + STEP_SIZE) };
+			Point c = { float(i + STEP_SIZE), (float)terrainHeight[i + STEP_SIZE][j + STEP_SIZE], float(j + STEP_SIZE) };
+			Point d = { float(i + STEP_SIZE), (float)terrainHeight[i + STEP_SIZE][j], (float)j };
+			Point normal;
+
+			glBegin(GL_QUADS);
 			// Point(i, j)
-			x = i;
-			y = terrainHeight[i][j];
-			z = j;
-			glTexCoord2f(0.0f, 0.0f); glVertex3i(x, y, z);
+			normal = (b - a) * (d - a);
+			normal /= normal.norm();
+			glNormal3f(normal.x, normal.y, normal.z);
+			glTexCoord2f(0.0f, 0.0f); glVertex3i(a.x, a.y, a.z);
 
 			// Point(i, j + 1)
-			x = i;
-			y = terrainHeight[i][j + STEP_SIZE];
-			z = (j + STEP_SIZE);
-			glTexCoord2f(0.0f, 1.0f); glVertex3i(x, y, z);
+			normal = (c - b) * (a - b);
+			normal /= normal.norm();
+			glNormal3f(normal.x, normal.y, normal.z);
+			glTexCoord2f(0.0f, 1.0f); glVertex3i(b.x, b.y, b.z);
 
 			// Point(i + 1, j + 1)
-			x = (i + STEP_SIZE);
-			y = terrainHeight[i + STEP_SIZE][j + STEP_SIZE];
-			z = (j + STEP_SIZE);
-			glTexCoord2f(1.0f, 1.0f); glVertex3i(x, y, z);
+			normal = (d - c) * (b - c);
+			normal /= normal.norm();
+			glNormal3f(normal.x, normal.y, normal.z);
+			glTexCoord2f(1.0f, 1.0f); glVertex3i(c.x, c.y, c.z);
 
 			// Point(i + 1, j)
-			x = (i + STEP_SIZE);
-			y = terrainHeight[i + STEP_SIZE][j];
-			z = j;
-			glTexCoord2f(1.0f, 0.0f); glVertex3i(x, y, z);
+			normal = (a - d) * (c - d);
+			normal /= normal.norm();
+			glNormal3f(normal.x, normal.y, normal.z);
+			glTexCoord2f(1.0f, 0.0f); glVertex3i(d.x, d.y, d.z);		
+			glEnd();
 		}
 	}
-	glEnd();
+	glBindTexture(GL_TEXTURE_2D, 0);		// clean the texture
 	glPopMatrix();
 }
 
@@ -169,11 +180,12 @@ GLvoid GLhandlers::renderBall() {
 			if (i != 8) {
 				glBindTexture(GL_TEXTURE_2D, textures[TEXTURE_BALL_BASE + i]);
 				gluSphere(ballQuadric, r, 32, 32);	// SolidSphere cannot show all texture
-			}
-			else {
+			} else {
 				drawSphere(r, textures[TEXTURE_BALL_BASE + i], 50, 50);
 			}
 
+		glBindTexture(GL_TEXTURE_2D, 0);		// clean the texture
+		glBindTexture(GL_TEXTURE_3D, 0);		// clean the texture
 		glPopMatrix();
 	}
 
@@ -213,6 +225,7 @@ GLvoid GLhandlers::renderFlag(GLfloat x, GLfloat z, GLint texture) {
 		glTranslated(0.0f, 0.0, 1.2f);
 		glBindTexture(GL_TEXTURE_2D, textures[texture]);
 		glEvalMesh2(GL_FILL, 0, 60, 0, 20);
+		glBindTexture(GL_TEXTURE_2D, 0);		// clean the texture
 
 	glPopMatrix();
 }
@@ -233,6 +246,7 @@ GLvoid GLhandlers::renderBanner(GLfloat x, GLfloat y, GLfloat z, GLint texture) 
 					u2 = float(i + 1) / (BANNER_UNUM - 1),
 					v2 = float(j + 1) / (BANNER_VNUM - 1);
 
+				glNormal3f(0.0f, 0.0f, 1.0f);
 				glTexCoord2f(u1, v1);	// texture
 				glVertex3f(bannerPoints[i][j][0], bannerPoints[i][j][1], bannerPoints[i][j][2]);	// small facet
 
@@ -247,6 +261,7 @@ GLvoid GLhandlers::renderBanner(GLfloat x, GLfloat y, GLfloat z, GLint texture) 
 			}
 		}
 		glEnd();
+		glBindTexture(GL_TEXTURE_2D, 0);		// clean the texture
 	glPopMatrix();
 
 	/* Animation */
@@ -279,7 +294,7 @@ GLvoid dealKeys(GLvoid) {
 	if (keys['O']) camera.y += (camera.y > 5.0f) ? 0.0f : 0.01f;
 	if (keys['I']) camera.z -= (camera.z < -10.0f)? 0.0f : 0.01f;
 	if (keys['M']) camera.z += (camera.z > 5.0f) ? 0.0f : 0.01f;
-	if (keys['K'])  camera = { 0.0f, 5.0f, 5.0f }; // reset
+	if (keys['K']) camera = { 0.0f, 5.0f, 5.0f }; // reset
 		
 	/* Player Controller */
 	Point accDir;
@@ -306,45 +321,78 @@ GLvoid dealKeys(GLvoid) {
 		accDir.z = mother->pos.x - camera.x;
 		billard.shoot(accDir);
 	}
-}
 
-/* Deal with key events */
-GLvoid updateBillard(GLvoid) {
-	billard.updateBalls();
+	if (keys['G'] && light) {
+		light = FALSE;
+	}
+	if (!keys['G']) {
+		light = TRUE;
+	}
 }
 
 GLint GLhandlers::drawHandler() {								// Here's Where We Do All The Drawing
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	// Clear Screen And Depth Buffer
-	glLoadIdentity();									// Reset The Current Modelview Matrix
+	glLoadIdentity();	// Reset The Current Modelview Matrix
 
-	/* Basic View*/
-	gluLookAt(camera.x, camera.y, camera.z, view.x, view.y, view.z, 0.0, 1.0, 0.0);
+	dealKeys();
+	std::vector<Point> crashPoints = billard.updateBalls();
 
+	/* mother ball */
+	Ball *mb = billard.getBall(0);
 	/* Lighting */
-	GLfloat LightAmbient[] = { 2.0f, 2.0f, 2.0f, 2.0f };	// Ambient Light
+	GLfloat LightAmbient[] = { 1.0f, 1.0f, 1.0f, 1.0f };	// Ambient Light
 	GLfloat LightDiffuse[] = { 1.0f, 1.0f, 1.0f, 1.0f };	// Diffuse Light
-	GLfloat LightPosition[] = { 0.0f, 10.0f, -3.0f, 1.0f };	// postion of light
-	glLightfv(GL_LIGHT1, GL_AMBIENT, LightAmbient);
-	glLightfv(GL_LIGHT1, GL_DIFFUSE, LightDiffuse);
-	glLightfv(GL_LIGHT1, GL_POSITION, LightPosition);
-	glEnable(GL_LIGHT1);
+	GLfloat LightPosition[] = { 0.0f, 0.0f, 3.0f, 1.0f };	// postion of light
+	if (light) {
+		glLightfv(GL_LIGHT0, GL_AMBIENT, LightAmbient);
+		glLightfv(GL_LIGHT0, GL_DIFFUSE, LightDiffuse);
+		glLightfv(GL_LIGHT0, GL_POSITION, LightPosition);
+		glEnable(GL_LIGHT0);
+	} else {
+		glDisable(GL_LIGHT0);
+	}
+
+	/* Spotlight */
+	GLfloat SpotLightDiffuse[] = { 0.0f, 10.0f, 0.0f, 1.0f };
+	GLfloat SpotLightPosition[] = { view.x, view.y + 1.0f, view.z, 1.0f };
+	GLfloat SpotLightDirection[] = { 0.0f, -1.0f, 0.0f };
 
 	/* Render */
 	glPushMatrix();
+		gluLookAt(camera.x, camera.y, camera.z, view.x, view.y, view.z, 0.0, 1.0, 0.0);
 		glTranslatef(0.0f, 0.0f, 1.0f);
+		
+		if (!light) {
+			glLightf(GL_LIGHT1, GL_SPOT_CUTOFF, 30.0);
+			glLightfv(GL_LIGHT1, GL_DIFFUSE, SpotLightDiffuse);
+			glLightfv(GL_LIGHT1, GL_POSITION, SpotLightPosition);
+			glLightfv(GL_LIGHT1, GL_SPOT_DIRECTION, SpotLightDirection);
+			glEnable(GL_LIGHT1);
+		} else {
+			glDisable(GL_LIGHT1);
+		}
+
 		renderTerrain();
 		renderSky();
 		renderFlag(-2.0f, 0.0f, TEXTURE_FLAG_2);
 		renderFlag(2.0f, -LENGTH, TEXTURE_FLAG_1);
 		renderBanner(0.0f, 3.0f, -5.0f, TEXTURE_TITLE);
-		renderBall();
+		part.draw(view, mb->vel, textures[TEXTURE_PARTICLE]);
+		part.crash(textures[TEXTURE_PARTICLE]);
+		for (int i = 0; i < crashPoints.size(); i++) {
+			Point p = crashPoints[i];
+			p.y = getHeight(p.x, p.z);
+			part.crashInit({0.0f, 0.0f, 0.0f});
+		}
+		renderBall();		
 	glPopMatrix();
-
-	dealKeys();
-	updateBillard();
+	
 	glFlush();
 	return TRUE;
 }
+
+//GLfloat stickAngle = 0.0f;	// angle offset of cue stick in z direction
+//GLfloat stickPower = 1.0f;
 
 /* Old Version : Deal with key events */
 //GLvoid updateBillard(GLvoid) {
